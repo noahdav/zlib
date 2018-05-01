@@ -8,6 +8,8 @@
 *.lo
 *.o
 *.dylib
+*.obj
+*.res
 
 *.gcda
 *.gcno
