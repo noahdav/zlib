@@ -13,6 +13,10 @@
 #
 TOP = .
 
+# The output directory
+#
+OUTDIR = $(TOP)
+
 # optional build flags
 LOC =
 
@@ -26,7 +30,7 @@ AS = ml
 LD = link
 AR = lib
 RC = rc
-CFLAGS  = -nologo -MD -W3 -O2 -Oy- -Zi -Fd"zlib" $(LOC)
+CFLAGS  = -nologo -MD -W3 -O2 -Oy- -Zi -Fd"$(OUTDIR)/zlib" $(LOC)
 WFLAGS  = -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 ASFLAGS = -coff -Zi $(LOC)
 LDFLAGS = -nologo -debug -incremental:no -opt:ref
@@ -43,33 +47,33 @@ all: $(STATICLIB) $(SHAREDLIB) $(IMPLIB) \
      example.exe minigzip.exe example_d.exe minigzip_d.exe
 
 $(STATICLIB): $(OBJS) $(OBJA)
-	$(AR) $(ARFLAGS) -out:$@ $(OBJS) $(OBJA)
+	$(AR) $(ARFLAGS) -out:$(OUTDIR)/$(@F) $(OBJS) $(OBJA)
 
 $(IMPLIB): $(SHAREDLIB)
 
 $(SHAREDLIB): $(TOP)/win32/zlib.def $(OBJS) $(OBJA) zlib1.res
-	$(LD) $(LDFLAGS) -def:$(TOP)/win32/zlib.def -dll -implib:$(IMPLIB) \
-	  -out:$@ -base:0x5A4C0000 $(OBJS) $(OBJA) zlib1.res
+	$(LD) $(LDFLAGS) -def:$(TOP)/win32/zlib.def -dll -implib:$(OUTDIR)/$(IMPLIB) \
+	  -out:$(OUTDIR)/$(@F) -base:0x5A4C0000 $(OBJS) $(OBJA) zlib1.res
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;2
 
 example.exe: example.obj $(STATICLIB)
-	$(LD) $(LDFLAGS) example.obj $(STATICLIB)
+	$(LD) $(LDFLAGS) example.obj $(OUTDIR)/$(STATICLIB) -out:$(OUTDIR)/$(@F)
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;1
 
 minigzip.exe: minigzip.obj $(STATICLIB)
-	$(LD) $(LDFLAGS) minigzip.obj $(STATICLIB)
+	$(LD) $(LDFLAGS) minigzip.obj $(OUTDIR)/$(STATICLIB) -out:$(OUTDIR)/$(@F)
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;1
 
 example_d.exe: example.obj $(IMPLIB)
-	$(LD) $(LDFLAGS) -out:$@ example.obj $(IMPLIB)
+	$(LD) $(LDFLAGS) -out:$@ example.obj $(OUTDIR)/$(IMPLIB) -out:$(OUTDIR)/$(@F)
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;1
 
 minigzip_d.exe: minigzip.obj $(IMPLIB)
-	$(LD) $(LDFLAGS) -out:$@ minigzip.obj $(IMPLIB)
+	$(LD) $(LDFLAGS) -out:$@ minigzip.obj $(OUTDIR)/$(IMPLIB) -out:$(OUTDIR)/$(@F)
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;1
 
@@ -151,13 +155,14 @@ testdll: example_d.exe minigzip_d.exe
 
 # cleanup
 clean:
-	-del $(STATICLIB)
-	-del $(SHAREDLIB)
-	-del $(IMPLIB)
+	-del $(OUTDIR)\$(STATICLIB)
+	-del $(OUTDIR)\$(SHAREDLIB)
+	-del $(OUTDIR)\$(IMPLIB)
 	-del *.obj
 	-del *.res
-	-del *.exp
-	-del *.exe
-	-del *.pdb
+	-del $(OUTDIR)\*.exp
+	-del $(OUTDIR)\*.exe
+	-del $(OUTDIR)\*.pdb
 	-del *.manifest
 	-del foo.gz
+    
