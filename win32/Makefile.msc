@@ -46,16 +46,19 @@ OBJA =
 all: $(STATICLIB) $(SHAREDLIB) $(IMPLIB) \
      example.exe minigzip.exe example_d.exe minigzip_d.exe
 
-$(STATICLIB): $(OBJS) $(OBJA)
+$(STATICLIB): $(OUTDIR) $(OBJS) $(OBJA)
 	$(AR) $(ARFLAGS) -out:$(OUTDIR)/$(@F) $(OBJS) $(OBJA)
 
 $(IMPLIB): $(SHAREDLIB)
 
-$(SHAREDLIB): $(TOP)/win32/zlib.def $(OBJS) $(OBJA) zlib1.res
+$(SHAREDLIB): $(OUTDIR) $(TOP)/win32/zlib.def $(OBJS) $(OBJA) zlib1.res
 	$(LD) $(LDFLAGS) -def:$(TOP)/win32/zlib.def -dll -implib:$(OUTDIR)/$(IMPLIB) \
 	  -out:$(OUTDIR)/$(@F) -base:0x5A4C0000 $(OBJS) $(OBJA) zlib1.res
 	if exist $@.manifest \
 	  mt -nologo -manifest $@.manifest -outputresource:$@;2
+
+$(OUTDIR):
+        if not exist $@ mkdir $@
 
 example.exe: example.obj $(STATICLIB)
 	$(LD) $(LDFLAGS) example.obj $(OUTDIR)/$(STATICLIB) -out:$(OUTDIR)/$(@F)
